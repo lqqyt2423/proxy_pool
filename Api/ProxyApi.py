@@ -114,7 +114,7 @@ def runFlask():
 def runFlaskWithGunicorn():
     _options = {
         'bind': '%s:%s' % (config.host_ip, config.host_port),
-        'workers': 4,
+        'workers': 1,
         'accesslog': '-',  # log to stdout
         'access_log_format': '%(h)s %(l)s %(t)s "%(r)s" %(s)s "%(a)s"'
     }
