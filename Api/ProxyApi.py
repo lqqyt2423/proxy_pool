@@ -84,6 +84,32 @@ def getStatus():
     status = ProxyManager().getNumber()
     return status
 
+# 添加 namespace 相关接口
+@app.route('/name/get_all/')
+def nameGetAll():
+    name = request.args.get('name')
+    if not name:
+        return 'error'
+    proxies = ProxyManager().getAllByName(name)
+    return jsonify([_.info_dict for _ in proxies])
+
+@app.route('/name/delete/', methods=['GET'])
+def nameDelete():
+    name = request.args.get('name')
+    proxy = request.args.get('proxy')
+    if not name or not proxy:
+        return 'error'
+    ProxyManager().deleteByName(name, proxy)
+    return {"code": 0, "src": "success"}
+
+@app.route('/name/get/')
+def nameGet():
+    name = request.args.get('name')
+    if not name:
+        return 'error'
+    proxy = ProxyManager().getByName(name)
+    return proxy.info_json if proxy else {"code": 0, "src": "no proxy"}
+
 
 if platform.system() != "Windows":
     import gunicorn.app.base

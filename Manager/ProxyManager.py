@@ -21,6 +21,7 @@ from Config.ConfigGetter import config
 from Util.LogHandler import LogHandler
 from Util.utilFunction import verifyProxyFormat
 from ProxyGetter.getFreeProxy import GetFreeProxy
+from datetime import datetime, timedelta
 
 
 class ProxyManager(object):
@@ -102,6 +103,39 @@ class ProxyManager(object):
         total_useful_queue = self.db.getNumber()
         return {'raw_proxy': total_raw_proxy, 'useful_proxy': total_useful_queue}
 
+
+    def getAllByName(self, name):
+        all_proxies = self.getAll()
+
+        self.db.changeTable(self.useful_proxy_queue + '_fail_' + name)
+        fail_list = self.db.getAll()
+        fail_proxies = [Proxy.newProxyFromJson(_) for _ in fail_list]
+
+        # todo: 优化
+        filter_proxies = []
+        for proxy in all_proxies:
+            isFailed = False
+            for failed in fail_proxies:
+                if failed.proxy == proxy.proxy:
+                    failed_date = datetime.strptime(failed.last_time, "%Y-%m-%d %H:%M:%S")
+                    if failed_date + timedelta(hours=24) > datetime.now():
+                        isFailed = True
+                    break
+            if not isFailed:
+                filter_proxies.append(proxy)
+
+        return filter_proxies
+
+    def deleteByName(self, name, proxy):
+        failed_proxy = Proxy(proxy=proxy, last_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        self.db.changeTable(self.useful_proxy_queue + '_fail_' + name)
+        self.db.put(failed_proxy)
+
+    def getByName(self, name):
+        proxies = self.getAllByName(name)
+        if proxies:
+            return random.choice(proxies)
+        return None
 
 if __name__ == '__main__':
     pp = ProxyManager()
